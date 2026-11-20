@@ -1,0 +1,57 @@
+Sensorless Drive Diagnosis - Source Validation
+================================================
+
+Source file: Sensorless_drive_diagnosis.txt
+Source size: 25,619,870 bytes
+Parsed rows: 58,509
+Parsed columns: 49
+Input features: 48
+Target column: final column (original class label)
+
+Validation:
+- All parsed columns are numeric in the source file: YES
+- Missing values: 0
+- Infinite values: 0
+- Exact duplicate rows (including target): 0
+- Duplicate feature rows (ignoring target): 0
+- Observed class labels: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+
+Original 11-class distribution:
+48
+1     5319
+2     5319
+3     5319
+4     5319
+5     5319
+6     5319
+7     5319
+8     5319
+9     5319
+10    5319
+11    5319
+
+Binary mapping used:
+- Original class 1 -> Normal
+- Original classes 2 through 11 -> Fault
+
+Binary distribution:
+Condition
+Fault     53190
+Normal     5319
+
+Binary proportions:
+Condition
+Fault     90.9091
+Normal     9.0909
+
+Generated files:
+- Sensorless_Drive_11class.csv: 48 features + OriginalClass (Class_01 ... Class_11)
+- Sensorless_Drive_Binary.csv: 48 features + Condition (Normal/Fault)
+
+Important:
+- Feature names F01-F48 are neutral column identifiers; the source does not provide
+  physically interpretable names for each derived feature in this flat file.
+- For the binary Orange3 project, use Condition as the target/class variable.
+- Do not use OriginalClass as an input feature in the binary project.
+- Preserve the original TXT file unchanged.
+- These CSVs are prepared copies, not replacements for the original source.
