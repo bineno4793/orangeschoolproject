@@ -376,57 +376,33 @@ CV-25의 ANOVA 특징 선택과 표준화 조합은 kNN과 Logistic Regression�
 - [CV-25 Random Forest](matrixCV25_randomforest.png), [Logistic Regression](matrixCV25_logistic.png), [kNN](matrixCV25_knn.png)
 - [최신 Orange3 워크플로](workflow.ows)
 
-## 12. 다음 실험: 전처리 효과 분리(ablation)
 
-CV-48과 CV-25를 비교하면 특징 선택과 표준화를 동시에 바꾸었으므로 두 전처리의 개별 기여를 분리하기 어렵다. 이를 보완하기 위해 다음 두 가지 교차검증 실험을 추가할 수 있다.
+## 12. 최종 정리 및 제출 방향
 
-| 실험 | 특징 선택 | 표준화 | 목적 |
-|---|---|---|---|
-| CV-48 | 없음 | 없음 | 기존 기준선 |
-| CV-48-Z | 없음 | 적용 | 표준화만의 영향 |
-| CV-25-A | ANOVA 상위 25개 | 없음 | 특징 선택만의 영향 |
-| CV-25-AZ | ANOVA 상위 25개 | 적용 | 두 전처리 조합의 영향(기존 CV-25) |
+현재까지 수행한 기본 모델 비교, 특징 수에 따른 비교, 표준화 전후 비교, 5-fold 층화 교차검증으로 본 프로젝트의 필수 실험을 마무리했다. 추가적인 모델이나 실험 조합을 무한정 늘리지 않고, 확보한 결과를 바탕으로 최종 결론과 한계를 정리한다.
 
-CV-48-Z와 CV-25-A를 추가하면 특징 선택과 표준화의 영향을 보다 분리해 해석할 수 있다. 모든 설정은 동일한 5-fold 층화 교차검증을 사용하고, 전처리는 Test & Score의 Preprocessor 입력을 통해 각 fold의 학습 부분에서만 적합해야 한다.
+### 12.1 최종 결론
 
+1. 전체 48개 특징의 Random Forest가 교차검증에서 가장 높은 절대 성능을 기록했다(Accuracy 99.9504%, MCC 0.996998).
+2. ANOVA 상위 25개 특징과 표준화를 결합한 Random Forest는 Accuracy 99.9180%, MCC 0.995029를 기록했다. 입력 특징을 48개에서 25개로 47.9% 줄이고도 높은 성능을 유지했다.
+3. 25개 특징+표준화는 kNN과 Logistic Regression의 Normal 클래스 재현율을 크게 높였다. 이는 입력 특징과 스케일이 모델의 판단 방식에 영향을 준다는 점을 보여준다.
+4. 특징을 적게 사용할수록 항상 좋은 것은 아니었다. 6개 특징에서는 Random Forest 성능이 뚜렷하게 감소했다.
+5. 모델 선택은 정확도 하나가 아니라 MCC, 클래스별 Recall, 혼동행렬, 입력 특징 수를 함께 고려해야 한다.
 
-### 12.1 Orange3에서 추가할 두 실험의 구체적 구성
+### 12.2 최종 활용 및 발전 방향
 
-두 실험 모두 기존 CV-48 / CV-25와 같은 전체 데이터와 같은 세 학습기를 사용한다. 기존 CV 위젯을 복제해 구성하면 다른 평가 설정이 섞이는 일을 줄일 수 있다.
+이 프로젝트의 접근은 전동기 구동계에서 얻은 전류 신호의 특징으로 구동 상태를 점검하는 상태 모니터링에 응용할 가능성이 있다. 특히 특징 선택과 표준화는 제한된 연산 자원에서 입력 변수를 줄이거나 모델별 전처리를 구성할 때 참고할 수 있다.
 
-**실험 A — CV-48-Z (48개 특징 + 표준화만)**
+다만 본 데이터는 UCI의 시험 장치에서 수집한 데이터이므로, 다른 모터·부하·회전 속도·실제 장치에 바로 적용할 수 있다고 단정할 수 없다. 실제 적용을 위해서는 대상 장치의 전류 신호를 별도로 수집하고, 해당 환경에서 다시 검증해야 한다.
 
-1. 전체 48개 특징이 나오는 Select Columns 출력을 새 Test & Score의 `Data` 입력에 연결한다.
-2. 새 Preprocess 위젯에는 `Scale`만 추가하고 `Standardize to μ=0, σ²=1`을 선택한다. Feature Selection은 넣지 않는다.
-3. Preprocess의 `Preprocessor` 출력을 새 Test & Score의 `Preprocessor` 입력에 연결한다. Preprocess의 `Preprocessed Data` / `Data` 출력으로 데이터 입력을 대체하지 않는다.
-4. kNN, Logistic Regression, Random Forest의 Learner 출력을 모두 같은 Test & Score에 연결한다.
-5. `Cross validation`, `Number of folds = 5`, `Stratified` 활성 상태를 사용한다. 별도 `Test Data`는 연결하지 않는다.
-6. Test & Score의 `Evaluation Results`를 Confusion Matrix에 연결하고, 결과 점수와 혼동행렬 3장을 저장한다.
+### 12.3 프로젝트 종료 범위
 
-**실험 B — CV-25-A (ANOVA 상위 25개 선택만)**
+본 보고서에 기록한 실험을 최종 실험 범위로 한다. 추가적인 CV-48-Z, CV-25-A, 신경망 등은 수행하지 않는다. 최종 제출물은 이 보고서, Orange3 워크플로, 실제 사용 데이터 파일로 정리한다.
 
-1. 전체 48개 특징이 나오는 Select Columns 출력을 새 Test & Score의 `Data` 입력에 연결한다.
-2. 새 Preprocess 위젯에 `Select Relevant Features`(또는 화면에 표시된 Feature Selection 항목)만 추가한다.
-3. Score는 `ANOVA`, Number of features는 `Fixed: 25`로 설정한다.
-4. `Scale` 단계는 추가하지 않는다.
-5. Preprocess의 `Preprocessor` 출력을 새 Test & Score의 `Preprocessor` 입력에 연결한다.
-6. 동일한 세 Learner를 연결하고, CV-48-Z와 똑같이 5-fold, Stratified 설정 및 Confusion Matrix 출력을 사용한다.
+### 12.4 제출 전 확인 사항
 
-**공통 확인 사항**
-
-- 전처리 위젯의 `Preprocessor` 출력을 Test & Score의 `Preprocessor` 입력으로 연결해야 한다. 그래야 교차검증의 각 학습 fold에 전처리가 맞춰진다.
-- Test & Score의 `Data`에는 전체 48개 특징 데이터를 연결한다. 전체 데이터에서 먼저 Reduced Data를 만든 다음 CV를 실행하지 않는다.
-- 두 실험 모두 CV-48/CV-25와 같은 전체 데이터 58,509행을 사용해야 한다.
-- Orange에서 결과가 계산되면 Test & Score 표의 6개 값과 Confusion Matrix 3개를 함께 저장한다. 두 출력을 같은 실행 결과에서 저장해야 수치 대조가 가능하다.
-
-### 12.2 추가 실험이 완성되면 비교할 기준
-
-| 비교 | 확인할 핵심 |
-|---|---|
-| CV-48-Z vs CV-48 | 표준화만 적용했을 때 kNN / Logistic Regression 개선 정도 |
-| CV-25-A vs CV-48 | ANOVA 특징 선택만 적용했을 때 개선 정도 |
-| CV-25-AZ vs CV-25-A | 특징 선택 이후 표준화가 추가로 주는 효과 |
-| CV-48-Z vs CV-25-AZ | 표준화만으로 충분한지, 특징 축소까지 필요한지 |
-| Random Forest의 모든 조건 | 입력 특징 절반 축소 시 성능 유지와 계산량 절충 여부 |
-
-특히 Random Forest는 현재도 CV-48에서 매우 강하므로, 추가 실험에서 몇 퍼센트포인트보다 MCC·Normal Recall·오분류 수와 특징 개수의 관계를 함께 비교한다.
+- [ ] Orange3 워크플로가 최신 상태로 저장되었는지 확인
+- [ ] 워크플로를 열었을 때 데이터 경로가 정상인지 확인
+- [ ] 제출용 데이터 파일이 워크플로에서 사용하는 데이터와 일치하는지 확인
+- [ ] OWS와 데이터 파일명을 학교 안내에 맞게 `학번이름.ows`, `학번이름.csv` 형식으로 변경
+- [ ] DOCX의 학번·이름 기입란 작성
