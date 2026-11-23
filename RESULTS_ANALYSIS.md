@@ -198,3 +198,42 @@ Random Forest에서는 48개 특징이 가장 높은 정확도를 보였다. 다
 - [25개 특징 표준화 후 Confusion Matrix](matrix25normalize_randomforest.png), [Logistic Regression](matrix25normalize_logistic.png), [kNN](matrix25normalize_knn.png)
 
 원본 데이터 출처: [UCI Machine Learning Repository — Dataset for Sensorless Drive Diagnosis](https://archive.ics.uci.edu/dataset/325/dataset+for+sensorless+drive+diagnosis)
+
+
+## 10. 평가 수치의 출처와 재현성 점검
+
+Test & Score와 Confusion Matrix는 서로 다른 실행 시점에 저장된 화면일 수 있으므로, 두 결과가 정확히 일치하는지 별도로 확인했다.
+
+### 10.1 Test & Score에서 사용자가 제공한 원본 수치
+
+**48개 특징 기본 실험의 Random Forest 행**
+
+| AUC | CA | F1 | Precision | Recall | MCC |
+|---:|---:|---:|---:|---:|---:|
+| 1.000000 | 0.999231 | 0.999229 | 0.999231 | 0.999231 | 0.995341 |
+
+**6개 특징 실험의 Random Forest 행**
+
+| AUC | CA | F1 | Precision | Recall | MCC |
+|---:|---:|---:|---:|---:|---:|
+| 0.974289 | 0.962396 | 0.961504 | 0.961048 | 0.962396 | 0.763132 |
+
+**11개, 25개, 25개+표준화 실험의 전체 Test & Score 수치**는 각각 3.3, 3.4, 3.5절에 기록한 값이며 사용자가 전달한 원본 수치다.
+
+### 10.2 Test & Score와 혼동행렬이 일치하지 않는 경우
+
+- 48개 특징 Random Forest: 저장된 혼동행렬은 7개 오분류(Accuracy 약 99.9402%, MCC 약 0.99638)를 보이지만, 사용자가 제공한 Test & Score 행은 Accuracy 99.9231%, MCC 0.995341이다.
+- 6개 특징 Random Forest: 저장된 혼동행렬은 438개 오분류(Accuracy 약 96.2567%, MCC 약 0.76374)를 보이지만, Test & Score 행은 Accuracy 96.2396%, MCC 0.763132이다.
+- 두 경우 모두 작은 차이지만 동일한 예측 결과에서 나온 값이라고 단정할 수 없다. Random Forest의 무작위성 또는 실행 시점/설정 차이로 결과가 달라졌을 가능성이 있다. 최종 제출 전 재현성 설정을 고정하고 같은 실행 결과에서 Test & Score와 Confusion Matrix를 다시 저장하는 것이 바람직하다.
+
+25개 특징 표준화 후의 세 모델과 25개 특징 표준화 전 결과에서는 저장된 혼동행렬에서 계산한 Accuracy 및 MCC가 제공된 Test & Score 수치와 일치한다.
+
+### 10.3 11개 특징 Logistic Regression 결과 중복
+
+11개 특징 Logistic Regression의 Test & Score 수치와 혼동행렬은 6개 특징 Logistic Regression과 동일하게 기록되어 있다. 이 결과가 수학적으로 불가능한 것은 아니지만, 특징 개수가 달라졌음에도 모든 예측 결과가 동일하게 나온 경위는 확인할 필요가 있다. 최종 워크플로에서 Rank(11)의 Reduced Data가 실제 11개 특징인지, 11개용 Test & Score의 Data와 Test Data가 각각 올바른 출력을 받는지 재확인하는 것이 좋다.
+
+### 10.4 최종 보고서 작성 시 주의
+
+- Test & Score의 평균 지표와 Confusion Matrix에서 계산한 클래스별 지표는 구분해서 표기한다.
+- Normal은 소수 클래스이므로 Normal Recall, Macro-F1, MCC 및 오분류 수를 함께 제시한다.
+- 같은 20% 테스트 세트로 여러 특징 수와 전처리를 반복 비교했으므로, 가장 높은 결과를 보고 최적값으로 선택한 과정에는 테스트 세트에 대한 선택 편향이 생길 수 있다. 학습 데이터 안에서 후보 특징 수와 전처리를 결정하고, 독립 테스트는 최종 평가에 사용하는 것이 더 엄밀하다.
