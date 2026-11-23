@@ -26,11 +26,9 @@ UCI Sensorless Drive Diagnosis 데이터를 정상(Normal)과 이상(Fault)으�
 
 CV-48 Random Forest가 가장 높은 절대 성능을 보였으며, CV-25 Random Forest는 특징을 48개에서 25개로 줄이고도 비슷한 수준의 성능을 유지했습니다. CV-25 전처리는 kNN과 Logistic Regression의 Normal 클래스 탐지 성능을 특히 크게 개선했습니다.
 
-세부 수치, 혼동행렬, 클래스별 Recall 및 추가 실험(CV-48-Z / CV-25-A) 구성은 [실험 결과 종합 분석 보고서](RESULTS_ANALYSIS.md)를 참고합니다.
+세부 수치, 혼동행렬, 클래스별 Recall 및 실험 설정·한계는 [실험 결과 종합 분석 보고서](RESULTS_ANALYSIS.md)를 참고합니다.
 
-## 다음 분석
 
-현재 CV-25에서는 ANOVA 특징 선택과 표준화를 함께 적용했습니다. 두 처리의 효과를 분리하기 위해 다음 실험을 추가할 예정입니다.
+## 최종 상태
 
-- CV-48-Z: 48개 특징 + 표준화만 적용
-- CV-25-A: ANOVA 상위 25개 특징 선택만 적용
+기본 모델 비교, 특징 수 비교, 표준화 전후 비교 및 5-fold 층화 교차검증을 마쳤습니다. 추가 실험을 늘리지 않고 현재 결과를 최종 보고서와 Orange3 워크플로로 정리합니다.
