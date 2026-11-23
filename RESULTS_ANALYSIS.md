@@ -388,3 +388,45 @@ CV-48과 CV-25를 비교하면 특징 선택과 표준화를 동시에 바꾸었
 | CV-25-AZ | ANOVA 상위 25개 | 적용 | 두 전처리 조합의 영향(기존 CV-25) |
 
 CV-48-Z와 CV-25-A를 추가하면 특징 선택과 표준화의 영향을 보다 분리해 해석할 수 있다. 모든 설정은 동일한 5-fold 층화 교차검증을 사용하고, 전처리는 Test & Score의 Preprocessor 입력을 통해 각 fold의 학습 부분에서만 적합해야 한다.
+
+
+### 12.1 Orange3에서 추가할 두 실험의 구체적 구성
+
+두 실험 모두 기존 CV-48 / CV-25와 같은 전체 데이터와 같은 세 학습기를 사용한다. 기존 CV 위젯을 복제해 구성하면 다른 평가 설정이 섞이는 일을 줄일 수 있다.
+
+**실험 A — CV-48-Z (48개 특징 + 표준화만)**
+
+1. 전체 48개 특징이 나오는 Select Columns 출력을 새 Test & Score의 `Data` 입력에 연결한다.
+2. 새 Preprocess 위젯에는 `Scale`만 추가하고 `Standardize to μ=0, σ²=1`을 선택한다. Feature Selection은 넣지 않는다.
+3. Preprocess의 `Preprocessor` 출력을 새 Test & Score의 `Preprocessor` 입력에 연결한다. Preprocess의 `Preprocessed Data` / `Data` 출력으로 데이터 입력을 대체하지 않는다.
+4. kNN, Logistic Regression, Random Forest의 Learner 출력을 모두 같은 Test & Score에 연결한다.
+5. `Cross validation`, `Number of folds = 5`, `Stratified` 활성 상태를 사용한다. 별도 `Test Data`는 연결하지 않는다.
+6. Test & Score의 `Evaluation Results`를 Confusion Matrix에 연결하고, 결과 점수와 혼동행렬 3장을 저장한다.
+
+**실험 B — CV-25-A (ANOVA 상위 25개 선택만)**
+
+1. 전체 48개 특징이 나오는 Select Columns 출력을 새 Test & Score의 `Data` 입력에 연결한다.
+2. 새 Preprocess 위젯에 `Select Relevant Features`(또는 화면에 표시된 Feature Selection 항목)만 추가한다.
+3. Score는 `ANOVA`, Number of features는 `Fixed: 25`로 설정한다.
+4. `Scale` 단계는 추가하지 않는다.
+5. Preprocess의 `Preprocessor` 출력을 새 Test & Score의 `Preprocessor` 입력에 연결한다.
+6. 동일한 세 Learner를 연결하고, CV-48-Z와 똑같이 5-fold, Stratified 설정 및 Confusion Matrix 출력을 사용한다.
+
+**공통 확인 사항**
+
+- 전처리 위젯의 `Preprocessor` 출력을 Test & Score의 `Preprocessor` 입력으로 연결해야 한다. 그래야 교차검증의 각 학습 fold에 전처리가 맞춰진다.
+- Test & Score의 `Data`에는 전체 48개 특징 데이터를 연결한다. 전체 데이터에서 먼저 Reduced Data를 만든 다음 CV를 실행하지 않는다.
+- 두 실험 모두 CV-48/CV-25와 같은 전체 데이터 58,509행을 사용해야 한다.
+- Orange에서 결과가 계산되면 Test & Score 표의 6개 값과 Confusion Matrix 3개를 함께 저장한다. 두 출력을 같은 실행 결과에서 저장해야 수치 대조가 가능하다.
+
+### 12.2 추가 실험이 완성되면 비교할 기준
+
+| 비교 | 확인할 핵심 |
+|---|---|
+| CV-48-Z vs CV-48 | 표준화만 적용했을 때 kNN / Logistic Regression 개선 정도 |
+| CV-25-A vs CV-48 | ANOVA 특징 선택만 적용했을 때 개선 정도 |
+| CV-25-AZ vs CV-25-A | 특징 선택 이후 표준화가 추가로 주는 효과 |
+| CV-48-Z vs CV-25-AZ | 표준화만으로 충분한지, 특징 축소까지 필요한지 |
+| Random Forest의 모든 조건 | 입력 특징 절반 축소 시 성능 유지와 계산량 절충 여부 |
+
+특히 Random Forest는 현재도 CV-48에서 매우 강하므로, 추가 실험에서 몇 퍼센트포인트보다 MCC·Normal Recall·오분류 수와 특징 개수의 관계를 함께 비교한다.
